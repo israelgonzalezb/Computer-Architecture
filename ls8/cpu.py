@@ -29,6 +29,19 @@ class CPU:
         self.alu("ADD", a, b)
         self.pc += 3
 
+    def PUSH(self, a, b):
+        print("PUSH")
+        self.reg[self.sp] -= 1
+        self.ram_write(self.reg[self.sp],self.reg[a])
+        self.pc += 2
+
+    def POP(self, a, b):
+        print("POP")
+        data = self.ram_read(self.reg[self.sp])
+        self.reg[a] = data
+        self.reg[self.sp] += 1
+        self.pc += 2
+
     def INVALID(self, a, b):
         print(f"Instruction {self.ram_read(self.pc)} is invalid, fatal error")
         self.running = False
@@ -39,6 +52,7 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.running = False
+        self.sp = 7 # R7 (self.reg[self.sp]) is reserved as the stack pointer (SP)
         # To reduce data type bugs, we'll coerce all inputs into base-10 data
         # Starting from the dict of possible commands
         # So, the only binary handled will be on initial input, and no more
@@ -48,7 +62,9 @@ class CPU:
             130: self.LDI,  # 0b10000010
             71:  self.PRN,  # 0b01000111
             162: self.MUL,  # 0b10100010
-            160: self.ADD   # 0b10100000
+            160: self.ADD,  # 0b10100000
+            69: self.PUSH,  # 0b01000101 
+            70: self.POP    # 0b01000110
         }
 
     # we have to define each function with multiple args, even if they don't use them all
@@ -145,7 +161,7 @@ class CPU:
             # This is an alternative to a switch
             # https://jaxenter.com/implement-switch-case-statement-python-138315.html
             # Check for each type of recognized command
-            func = self.commands.get(ir, lambda: INVALID)
+            func = self.commands.get(ir, self.INVALID)
             func(op_a, op_b)
 
             """
