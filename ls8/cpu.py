@@ -64,7 +64,28 @@ class CPU:
 
     def JMP(self, a, b):
         print("JMP")
-        self.pc = a
+        self.pc = self.reg[a]
+
+    def JEQ(self, a, b):
+        print("JEQ")
+        # Use AND mask to check whether E flag is true
+        if (self.reg[self.fl] & 0b1) == 1:
+            # self.JMP(a, b)
+            self.pc = self.reg[a]
+        else:
+            self.pc += 2
+
+    def JNE(self, a, b):
+        print("JNE")
+        # Use OR mask to check whether E flag is false
+        if (self.reg[self.fl] & 0b1111110) == self.reg[self.fl]:
+            print(f"E flag is false {bin(self.reg[self.fl])}")
+            print(f"Given address {a} which is {self.reg[a]}")
+            print(f"The command at {self.reg[a]} is {self.ram[self.reg[a]]}")
+            # self.JMP(a, b)
+            self.pc = self.reg[a]
+        else:
+            self.pc += 2
 
     def INVALID(self, a, b):
         print(f"Instruction {self.ram_read(self.pc)} is invalid, fatal error")
@@ -98,7 +119,9 @@ class CPU:
             17: self.RET,   # 0b0010001
             72: self.PRA,   # 0b01001000
             167: self.CMP,  # 0b10100111
-            84: self.JMP    # 0b01010100
+            84: self.JMP,   # 0b01010100
+            85: self.JEQ,   # 0b01010101
+            86: self.JNE    # 0b01010110
         }
 
     # we have to define each function with multiple args, even if they don't use them all
@@ -126,8 +149,6 @@ class CPU:
             sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
-
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
@@ -140,20 +161,21 @@ class CPU:
         elif op == "CMP":
             # Compare reg_a and reg_b
             # FL bits: 00000LGE
-            if reg_a == reg_b:
+            print(f"Comparing {self.reg[reg_a]} and {self.reg[reg_b]}")
+            if self.reg[reg_a] == self.reg[reg_b]:
                 # If they are equal, set E flag to 1, otherwise set it to 0
                 self.reg[self.fl] = self.reg[self.fl] | 0b1
             else:
                 self.reg[self.fl] = self.reg[self.fl] & 0b11111110
 
             # if reg_a is less than reg_b, set L flag to 1, otherwise 0
-            if reg_a < reg_b:
+            if self.reg[reg_a] < self.reg[reg_b]:
                 self.reg[self.fl] = self.reg[self.fl] | 0b100
             else:
                 self.reg[self.fl] = self.reg[self.fl] & 0b11111011
 
             # if reg_a is greater than reg_b, set G flag to 1, otherwise 0
-            if reg_a > reg_b:
+            if self.reg[reg_a] > self.reg[reg_b]:
                 self.reg[self.fl] = self.reg[self.fl] | 0b10
             else:
                 self.reg[self.fl] = self.reg[self.fl] & 0b11111011
@@ -218,35 +240,6 @@ class CPU:
             # Check for each type of recognized command
             func = self.commands.get(ir, self.INVALID)
             func(op_a, op_b)
-
-            """
-            if ir is self.commands["HLT"]:
-                print("HLT")
-                running = False
-                break
-            elif ir is self.commands["PRN"]:
-                print("PRN")
-                output = self.reg[bin(op_a)]
-                print(int(output, 2))
-                self.pc += 2
-            elif ir is self.commands["LDI"]:
-                print("LDI")
-                self.reg[int(op_a, 2)] = int(op_b, 2)
-                self.pc += 3
-            elif int(ir, 2) is self.commands["MUL"]:
-                print("MUL")
-                print("Multiply command given", op_a, op_b)
-                self.alu("MUL", int(op_a, 2), int(op_b, 2))
-                self.pc += 3
-            elif int(ir, 2) is self.commands["ADD"]:
-                print("ADD")
-                self.alu("ADD", int(op_a, 2), int(op_b, 2))
-                self.pc += 3
-            else:
-                print(
-                    f"Instruction {self.ram_read(self.pc)} is invalid, fatal error")
-                running = False
-            """
 
 
     def ram_read(self, address):
