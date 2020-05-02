@@ -58,8 +58,13 @@ class CPU:
         self.reg[self.sp] += 1
 
     def PRA(self, a, b):
+        print("PRA")
         print(chr(b))
         self.pc += 2
+
+    def JMP(self, a, b):
+        print("JMP")
+        self.pc = a
 
     def INVALID(self, a, b):
         print(f"Instruction {self.ram_read(self.pc)} is invalid, fatal error")
@@ -92,7 +97,8 @@ class CPU:
             80: self.CALL,  # 0b0101000
             17: self.RET,   # 0b0010001
             72: self.PRA,   # 0b01001000
-            167: self.CMP   # 0b10100111
+            167: self.CMP,  # 0b10100111
+            84: self.JMP    # 0b01010100
         }
 
     # we have to define each function with multiple args, even if they don't use them all
