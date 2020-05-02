@@ -42,6 +42,20 @@ class CPU:
         self.reg[self.sp] += 1
         self.pc += 2
 
+    def CALL(self, a, b):
+        self.reg[self.sp] -= 1
+        self.ram_write(self.reg[self.sp], self.pc + 2)
+
+        self.pc = self.reg[a]
+
+    def RET(self, a, b):
+        self.pc = self.ram_read(self.reg[self.sp])
+        self.reg[self.sp] += 1
+
+    def PRA(self, a, b):
+        print(chr(b))
+        self.pc += 2
+
     def INVALID(self, a, b):
         print(f"Instruction {self.ram_read(self.pc)} is invalid, fatal error")
         self.running = False
@@ -64,11 +78,14 @@ class CPU:
             162: self.MUL,  # 0b10100010
             160: self.ADD,  # 0b10100000
             69: self.PUSH,  # 0b01000101 
-            70: self.POP    # 0b01000110
+            70: self.POP,   # 0b01000110
+            80: self.CALL,  # 0b0101000
+            17: self.RET,   # 0b0010001
+            72: self.PRA    # 0b01001000
         }
 
     # we have to define each function with multiple args, even if they don't use them all
-    # this is to avoid the positional args error when conditonall executing the relevant func found in commands dict
+    # this is to avoid the positional args error when conditonally executing the relevant func found in commands dict
 
     def load(self):
         """Load a program into memory."""
@@ -101,7 +118,7 @@ class CPU:
                     if number_string == '':
                         continue
 
-                    num = int(number_string, 2)
+                    num = int(number_string, 2) # coerce input data from binary to base-10
                     self.ram[address] = num
                     address += 1
                     # print("{:08b} is {:d}".format(num, num))
@@ -147,13 +164,33 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        self.running = True
+        self.running = True # We could replace this with sys.exit(0)
+        #self.timer = time.perf_counter() # import time
         while self.running:
             ir = self.ram_read(self.pc)
             op_a = self.ram_read(self.pc + 1)
             op_b = self.ram_read(self.pc + 2)
-            print(
-                f"ir: {ir} at {self.pc}, op_a: {op_a} at {self.pc+1}, op_b: {op_b} at {self.pc+2}")
+            #print(
+            #    f"ir: {ir} at {self.pc}, op_a: {op_a} at {self.pc+1}, op_b: {op_b} at {self.pc+2}")
+
+            # if time.perf_counter() - self.timer >= 1:
+            #     self.timer = time.perf_counter()
+            #     self.reg[6] = 0b1 # Fix this.... 
+
+            #     maskedInterrupts = self.reg[5] & self.reg[6] # bitwise mask operation
+
+            #     interrupts_string = f"{maskedInterrupts:>08b}"
+
+            #     for i in range(0, 8):
+            #         is_bit_set = interrupts_string[i] == "1"
+            #         self.interrupts_allowed = False
+            #         self.reg[6] = 0 # we want to set a specific bit off, not all like how this is currently written
+            #         # TODO: Push pc reg to stack
+            #         # TODO: Push FL to stack
+            #         # TODO: Push R0-R6 to stack in order
+
+                # TODO: implement IRET
+
 
             # Python doesn't have a switch statement...
             # We've defined the commands dict with references to defined functions
