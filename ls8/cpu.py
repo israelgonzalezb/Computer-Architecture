@@ -2,46 +2,51 @@
 
 import sys
 
+dev = False
+
+def printDev(text1="", text2="", text3=""):
+    if dev == True:
+        print(text1, text2, text3)
 
 class CPU:
     """Main CPU class."""
     def HLT(self, a, b):
-        print("HLT")
+        printDev("HLT")
         self.running = False
 
     def PRN(self, a, b):
-        print("PRN")
+        printDev("PRN")
         print(self.reg[a])
         self.pc += 2
 
     def LDI(self, a, b):
-        print("LDI")
+        printDev("LDI")
         self.reg[a] = b
         self.pc += 3
 
     def MUL(self, a, b):
-        print("MUL")
+        printDev("MUL")
         self.alu("MUL", a, b)
         self.pc += 3
 
     def ADD(self, a, b):
-        print("ADD")
+        printDev("ADD")
         self.alu("ADD", a, b)
         self.pc += 3
     
     def CMP(self, a, b):
-        print("CMP")
+        printDev("CMP")
         self.alu("CMP", a, b)
         self.pc += 3
 
     def PUSH(self, a, b):
-        print("PUSH")
+        printDev("PUSH")
         self.reg[self.sp] -= 1
         self.ram_write(self.reg[self.sp],self.reg[a])
         self.pc += 2
 
     def POP(self, a, b):
-        print("POP")
+        printDev("POP")
         data = self.ram_read(self.reg[self.sp])
         self.reg[a] = data
         self.reg[self.sp] += 1
@@ -58,16 +63,16 @@ class CPU:
         self.reg[self.sp] += 1
 
     def PRA(self, a, b):
-        print("PRA")
+        printDev("PRA")
         print(chr(b))
         self.pc += 2
 
     def JMP(self, a, b):
-        print("JMP")
+        printDev("JMP")
         self.pc = self.reg[a]
 
     def JEQ(self, a, b):
-        print("JEQ")
+        printDev("JEQ")
         # Use AND mask to check whether E flag is true
         if (self.reg[self.fl] & 0b1) == 1:
             # self.JMP(a, b)
@@ -76,12 +81,12 @@ class CPU:
             self.pc += 2
 
     def JNE(self, a, b):
-        print("JNE")
+        printDev("JNE")
         # Use OR mask to check whether E flag is false
         if (self.reg[self.fl] & 0b1111110) == self.reg[self.fl]:
-            print(f"E flag is false {bin(self.reg[self.fl])}")
-            print(f"Given address {a} which is {self.reg[a]}")
-            print(f"The command at {self.reg[a]} is {self.ram[self.reg[a]]}")
+            printDev(f"E flag is false {bin(self.reg[self.fl])}")
+            printDev(f"Given address {a} which is {self.reg[a]}")
+            printDev(f"The command at {self.reg[a]} is {self.ram[self.reg[a]]}")
             # self.JMP(a, b)
             self.pc = self.reg[a]
         else:
@@ -143,7 +148,7 @@ class CPU:
                     self.ram[address] = num
                     address += 1
                     # print("{:08b} is {:d}".format(num, num))
-                    print(f"{num:>08b} is {num:>0d}")
+                    printDev(f"{num:>08b} is {num:>0d}")
         except FileNotFoundError:
             print(f"{sys.argv[0]}: could not find {sys.argv[1]}")
             sys.exit(2)
@@ -153,15 +158,15 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
         elif op == "MUL":
-            print("MULT received", op, reg_a, reg_b)
-            print("reg_a holds ", self.reg[reg_a])
-            print("reg_b holds ", self.reg[reg_b])
+            printDev("MULT received", op, reg_a, reg_b)
+            printDev("reg_a holds ", self.reg[reg_a])
+            printDev("reg_b holds ", self.reg[reg_b])
             self.reg[reg_a] *= self.reg[reg_b]
-            print("Mul changed reg_a to", self.reg[reg_a])
+            printDev("Mul changed reg_a to", self.reg[reg_a])
         elif op == "CMP":
             # Compare reg_a and reg_b
             # FL bits: 00000LGE
-            print(f"Comparing {self.reg[reg_a]} and {self.reg[reg_b]}")
+            printDev(f"Comparing {self.reg[reg_a]} and {self.reg[reg_b]}")
             if self.reg[reg_a] == self.reg[reg_b]:
                 # If they are equal, set E flag to 1, otherwise set it to 0
                 self.reg[self.fl] = self.reg[self.fl] | 0b1
@@ -199,8 +204,6 @@ class CPU:
 
         for i in range(8):
             print(" %02X" % self.reg[i], end='')
-
-        print()
 
     def run(self):
         """Run the CPU."""
@@ -245,7 +248,7 @@ class CPU:
     def ram_read(self, address):
         self.mar = address
         self.mdr = self.ram[address]
-        print(f"Given {address}, ram_read returns", self.mdr)
+        printDev(f"Given {address}, ram_read returns", self.mdr)
 
         return self.mdr
 
