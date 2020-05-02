@@ -28,6 +28,11 @@ class CPU:
         print("ADD")
         self.alu("ADD", a, b)
         self.pc += 3
+    
+    def CMP(self, a, b):
+        print("CMP")
+        self.alu("CMP", a, b)
+        self.pc += 3
 
     def PUSH(self, a, b):
         print("PUSH")
@@ -66,11 +71,16 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.running = False
-        self.sp = 7 # R7 (self.reg[self.sp]) is reserved as the stack pointer (SP)
+        # R7 (self.reg[self.sp]) is reserved as the stack pointer (SP)
+        self.sp = 7 
+        # R4 will be used as flags register
+        self.fl = 4 
+        # FL bits: 00000LGE
+        self.reg[self.fl] = 0b00000000 
+
         # To reduce data type bugs, we'll coerce all inputs into base-10 data
         # Starting from the dict of possible commands
         # So, the only binary handled will be on initial input, and no more
-
         self.commands = {
             1:   self.HLT,  # 0b00000001
             130: self.LDI,  # 0b10000010
@@ -88,26 +98,7 @@ class CPU:
     # this is to avoid the positional args error when conditonally executing the relevant func found in commands dict
 
     def load(self):
-        """Load a program into memory."""
-
         address = 0
-
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010,  # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111,  # PRN R0
-        #     0b00000000,
-        #     0b00000001,  # HLT
-        # ]
-
-        # # puts each item from program into ram
-        # for instruction in program:
-        #     self.ram[address] = bin(instruction)
-        #     address += 1
 
         try:
             with open(sys.argv[1]) as file:
@@ -133,12 +124,32 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
-        elif op == "MUL":  # TODO: Make sure this is working!!
+        elif op == "MUL":
             print("MULT received", op, reg_a, reg_b)
             print("reg_a holds ", self.reg[reg_a])
             print("reg_b holds ", self.reg[reg_b])
             self.reg[reg_a] *= self.reg[reg_b]
             print("Mul changed reg_a to", self.reg[reg_a])
+        elif op == "CMP":
+            # Compare reg_a and reg_b
+            # FL bits: 00000LGE
+            if reg_a == reg_b:
+                # If they are equal, set E flag to 1, otherwise set it to 0
+                self.reg[self.fl] = self.reg[self.fl] | 0b1
+            else:
+                self.reg[self.fl] = self.reg[self.fl] & 0b11111110
+
+            # if reg_a is less than reg_b, set L flag to 1, otherwise 0
+            if reg_a < reg_b:
+                self.reg[self.fl] = self.reg[self.fl] | 0b100
+            else:
+                self.reg[self.fl] = self.reg[self.fl] & 0b11111011
+
+            # if reg_a is greater than reg_b, set G flag to 1, otherwise 0
+            if reg_a > reg_b:
+                self.reg[self.fl] = self.reg[self.fl] | 0b10
+            else:
+                self.reg[self.fl] = self.reg[self.fl] & 0b11111011
         else:
             raise Exception("Unsupported ALU operation")
 
