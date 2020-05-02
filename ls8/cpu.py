@@ -91,7 +91,8 @@ class CPU:
             70: self.POP,   # 0b01000110
             80: self.CALL,  # 0b0101000
             17: self.RET,   # 0b0010001
-            72: self.PRA    # 0b01001000
+            72: self.PRA,   # 0b01001000
+            167: self.CMP   # 0b10100111
         }
 
     # we have to define each function with multiple args, even if they don't use them all
